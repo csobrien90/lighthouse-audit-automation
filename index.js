@@ -13,12 +13,14 @@ const sites = {
 const cli = require('child_process');
 var results = [];
 
+cli.exec(`mkdir lighthouse-reports`);
+
 Object.keys(sites).forEach(key => {
 	// Mobile audit
-	cli.exec(`lighthouse ${root}${sites[key]} --output=json --output-path=./lighthouse-report_${key}_mobile.json`);
-	results.push(`lighthouse-report_${key}_mobile.json`);
+	cli.exec(`lighthouse ${root}${sites[key]} --output=json --output-path=./lighthouse-reports/${key}_mobile.json`);
+	results.push(`${key}_mobile.json`);
 
 	// Desktop audit
-	cli.exec(`lighthouse ${root}${sites[key]} --preset=desktop --output=json --output-path=./lighthouse-report_${key}_desktop.json`);
-	results.push(`lighthouse-report_${key}_desktop.json`);
+	cli.exec(`lighthouse ${root}${sites[key]} --preset=desktop --output=json --output-path=./lighthouse-reports/${key}_desktop.json`);
+	results.push(`${key}_desktop.json`);
 })
