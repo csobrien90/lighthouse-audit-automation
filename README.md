@@ -11,10 +11,10 @@ npm update
 
 ### Make reports
 
-put target sites in root and sites variables in assess.js
+put targets in `root` and `sites` variables in assess.js
 ```
-./assess.js to build report directory
-./analyze.js to analyze, output full summary, and delete directory of reports
+./assess.js // Build report directory
+./analyze.js // Analyze, output full summary, and delete directory of reports
 ```
 
 ## To do
