@@ -10,8 +10,7 @@ const sites = {
 };
 
 function assess() {
-	console.log('Assessing accessibility of all sites.');
-	console.log('This could take a minute...');
+	console.log('Assessing all sites - this could take a minute...');
 
 	const fs = require('fs');
     const path = require('path');
@@ -20,7 +19,26 @@ function assess() {
 	const execAsync = promisify(exec);
 	
 	let filenames = [];
-	
+	const sitesLength = Object.keys(sites).length * 2;
+
+	exec(`mkdir lighthouse-reports`);
+	console.log('');
+	logProgress(0);
+	Object.keys(sites).forEach(key => {
+		execAsync(`lighthouse ${root}${sites[key]} --output=json --output-path=./lighthouse-reports/${key}_mobile.json`)
+			.then(() => {
+				filenames.push(`${key}_mobile.json`);
+				logProgress(filenames.length/sitesLength);
+				if (filenames.length === sitesLength) analyze(filenames);
+			})
+		execAsync(`lighthouse ${root}${sites[key]} --preset=desktop --output=json --output-path=./lighthouse-reports/${key}_desktop.json`)
+			.then(() => {
+				filenames.push(`${key}_desktop.json`);
+				logProgress(filenames.length/sitesLength);
+				if (filenames.length === sitesLength) analyze(filenames);
+			})
+	})
+
 	function promisify(fn) {
 		/**
 		 * @param {...Any} params The params to pass into *fn*
@@ -31,21 +49,8 @@ function assess() {
 		}
 	}
 
-	exec(`mkdir lighthouse-reports`);
-	Object.keys(sites).forEach(key => {
-		execAsync(`lighthouse ${root}${sites[key]} --output=json --output-path=./lighthouse-reports/${key}_mobile.json`)
-			.then(() => {
-				filenames.push(`${key}_mobile.json`);
-				if (filenames.length === Object.keys(sites).length * 2) analyze(filenames);
-			})
-		execAsync(`lighthouse ${root}${sites[key]} --preset=desktop --output=json --output-path=./lighthouse-reports/${key}_desktop.json`)
-			.then(() => {
-				filenames.push(`${key}_desktop.json`);
-				if (filenames.length === Object.keys(sites).length * 2) analyze(filenames);
-			})
-	})
-
 	function analyze(filenames) {
+		console.log('');
 		console.log('Analyzing lighthouse data...');
 		var lighthouseSummary = {
 			mobile: [],
@@ -79,6 +84,7 @@ function assess() {
 	}
 
 	function generateCSV(data) {
+		console.log('');
 		console.log('Creating .csv of results...');
 	
 		let mobile = [];
@@ -122,6 +128,18 @@ function assess() {
 		const filename = path.join(__dirname, `${pageName}-lighthouse-reports.csv`);
 		fs.writeFileSync(filename, output.join(os.EOL));
 
+	}
+
+	function logProgress(percent) {
+		let progressBar = '[';
+		let done = percent * 20;
+		for (let i = 0; i < 20; i++) {
+			let char = done > i ? '█' : '-';
+			progressBar += char;
+		}
+		progressBar += '] ';
+		progressBar += `(${percent * 100}%)`;
+		console.log(progressBar);
 	}
 
 }
