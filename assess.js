@@ -1,22 +1,24 @@
 #!/usr/bin/env node
 
 // Define sites on which to run audit
-const root = 'https://www.junkyarn.com/';
+const pageName = 'Google';
+const root = 'https://google.com/'; //must have trailing slash
 const sites = {
-//  'filename'			: 'extension',
+//  'page name'			: 'url extension',
+//  'example-page		: 'pages/demos/example',
 	'home'				: '',
-	'cart'				: 'cart',
-	'product-grid'		: 'collections/galentines-day-2019-collection-barbie',
-	'single-product'	: 'collections/galentines-day-2019-collection-barbie/products/junkyarn-dk-ready-to-ship?variant=39511884038231'
 };
 
 function assess() {
 	console.log('Assessing accessibility of all sites.');
-	console.log('This could take a minute.');
-	console.log('Thank you for your patience!');
+	console.log('This could take a minute...');
 
+	const fs = require('fs');
+    const path = require('path');
+    const os = require('os');
 	const exec = require('child_process').exec;
 	const execAsync = promisify(exec);
+	
 	let filenames = [];
 	
 	function promisify(fn) {
@@ -44,6 +46,7 @@ function assess() {
 	})
 
 	function analyze(filenames) {
+		console.log('Analyzing lighthouse data...');
 		var lighthouseSummary = {
 			mobile: [],
 			desktop: []
@@ -52,9 +55,8 @@ function assess() {
 			let report = require(`./lighthouse-reports/${file}`)
 			
 			// Get desired info from each report
-			let siteArr = report.finalUrl.split('/');
 			let reportSummary = {
-				site: siteArr[siteArr.length -1],
+				site: file.split('_')[0],
 				performance: report.categories.performance.score,
 				accessibility: report.categories.accessibility.score,
 				bestPractices: report.categories['best-practices'].score,
@@ -68,13 +70,60 @@ function assess() {
 			}
 		})
 
-		// Output summary object in console
-		console.log(lighthouseSummary);
+		// Output summary object as .csv
+		generateCSV(lighthouseSummary);
 		
 		// Clean up lighthouse-reports folder
 		execAsync('rm -r lighthouse-reports').then(console.log('Done!'));
 
-	}	
+	}
+
+	function generateCSV(data) {
+		console.log('Creating .csv of results...');
+	
+		let mobile = [];
+		let desktop = [];
+
+		Object.keys(data).forEach(format => {
+			data[format].forEach(page => {
+				// Get row data
+				let row = [
+					page.site,
+					page.performance,
+					page.accessibility,
+					page.bestPractices,
+					page.seo
+				];
+
+				switch(format) {
+					case "mobile":
+						mobile.push(row.join(','));
+						break;
+					case "desktop":
+						desktop.push(row.join(','));
+						break;
+					default:
+						console.log('error: invalid format');
+				}
+			})
+		})
+
+		const headers = ['Site', 'Performance', 'Accessibility', 'Best practices', 'SEO'];
+		const output = [
+			['Mobile'],
+			headers,
+			...mobile,
+			[], [],
+			['Desktop'],
+			headers,
+			...desktop
+		];
+
+		const filename = path.join(__dirname, `${pageName}-lighthouse-reports.csv`);
+		fs.writeFileSync(filename, output.join(os.EOL));
+
+	}
+
 }
 
 assess();

@@ -11,15 +11,13 @@ npm update
 
 ### Make reports
 
-put targets in `root` and `sites` variables in assess.js
+put targets in `pageName`, `root`, and `sites` variables in assess.js
 ```
-./assess.js // Build report directory
-./analyze.js // Analyze, output full summary, and delete directory of reports
+npm run assess
 ```
 
 ## To do
 
-- Make lighthouse commands asynchronous and connect assess/analyze phases
-- Output summary as .csv
-- Prompt user input for sites to audit
+- Show progress bar or similar feedback to user throughout
+- Prompt user input for sites to audit or allow input in other format
 - Make npm package portable
