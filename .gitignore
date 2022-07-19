@@ -1,2 +1,2 @@
-lighthouse-reports/*
-node-modules/*
+lighthouse-reports
+node-modules
